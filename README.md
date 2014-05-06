@@ -1,2 +1,4 @@
-rethinkdb-example-nodejs
+Examples with Node.js and RethinkDB
 ========================
+
+WIP
