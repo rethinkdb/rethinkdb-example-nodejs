@@ -81,8 +81,8 @@ function update(req, res, next) {
             else {
                 res.send(JSON.stringify(result.new_val));
             }
+            next();
         });
-        next();
     }
     else {
         handleError(res, new Error("The todo must have a field `id`."))
@@ -103,8 +103,8 @@ function del(req, res, next) {
             else {
                 res.send(JSON.stringify(result));
             }
+            next();
         });
-        next();
     }
     else {
         handleError(res, new Error("The todo must have a field `id`."))
