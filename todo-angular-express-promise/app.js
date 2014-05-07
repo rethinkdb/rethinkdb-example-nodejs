@@ -50,7 +50,7 @@ function create(req, res, next) {
         else {
             res.send(JSON.stringify(result.new_val));
         }
-    }).error(handleError(res));
+    }).error(handleError(res))
     .finally(next);
 }
 
@@ -62,7 +62,7 @@ function update(req, res, next) {
     if ((todo != null) && (todo.id != null)) {
         r.table('todos').get(todo.id).update(todo, {returnVals: true}).run(req._rdbConn).then(function(result) {
             res.send(JSON.stringify(result.new_val));
-        }).error(handleError(res));
+        }).error(handleError(res))
         .finally(next);
     }
     else {
@@ -79,7 +79,7 @@ function del(req, res, next) {
     if ((todo != null) && (todo.id != null)) {
         r.table('todos').get(todo.id).delete().run(req._rdbConn).then(function(result) {
             res.send(JSON.stringify(result));
-        }).error(handleError(res));
+        }).error(handleError(res))
         .finally(next);
     }
     else {
@@ -123,40 +123,20 @@ r.connect(config.rethinkdb, function(err, conn) {
         startExpress();
     }).error(function(err) {
         // The database/table/index was not available, create them
-        r.dbCreate(config.rethinkdb.db).run(conn), function(err, result) {
-            if ((err) && (!err.message.match(/Database `.*` already exists/))) {
-                console.log("Could not create the database `"+config.db+"`");
-                console.log(err);
-                process.exit(1);
-            }
-            console.log('Database `'+config.rethinkdb.db+'` created.');
-
-            r.tableCreate('todos').run(conn, function(err, result) {
-                if ((err) && (!err.message.match(/Table `.*` already exists/))) {
-                    console.log("Could not create the table `todos`");
-                    console.log(err);
-                    process.exit(1);
-                }
-                console.log('Table `todos` created.');
-
-                r.table('todos').indexCreate('createdAt').run(conn, function(err, result) {
-                    if ((err) && (!err.message.match(/Index `.*` already exists/))) {
-                        console.log("Could not create the index `todos`");
-                        console.log(err);
-                        process.exit(1);
-                    }
-
-                    console.log('Index `createdAt` created.');
-
-                    r.table('todos').indexWait('createdAt').run(conn, function(err, result) {
+        r.dbCreate(config.rethinkdb.db).run(conn).finally(function() {
+            r.tableCreate('todos').run(conn).finally(function() {
+                r.table('todos').indexCreate('createdAt').run(conn).finally(function(result) {
+                    r.table('todos').indexWait('createdAt').run(conn).then(function(result) {
+                        console.log("Table and index are available, starting express...");
+                        startExpress();
+                        conn.close();
+                    }).error(function(err) {
                         if (err) {
                             console.log("Could not wait for the completion of the index `todos`");
                             console.log(err);
                             process.exit(1);
                         }
-                        console.log('Index `createdAt` ready.');
                         console.log("Table and index are available, starting express...");
-
                         startExpress();
                         conn.close();
                     });
