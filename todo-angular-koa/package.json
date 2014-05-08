@@ -1,0 +1,15 @@
+{
+    "name": "todo"
+  , "version": "0.0.2"
+  , "private": true
+  , "dependencies": {
+      "koa": "0.6.0"
+    , "koa-static": "1.4.2"
+    , "koa-route": "1.0.2"
+    , "co-body": "0.0.1"
+    , "co": "3.0.2"
+    , "body-parser": "1.0.2"
+    , "rethinkdb": "1.12.0-0"
+    , "co-assert-timeout": "0.0.4"
+  }
+}
