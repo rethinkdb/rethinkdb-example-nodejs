@@ -118,30 +118,36 @@ function closeConnection(req, res, next) {
  * Create tables/indexes then start express
  */
 r.connect(config.rethinkdb, function(err, conn) {
+    if (err) {
+        console.log("Could not open a connection to initialize the database");
+        console.log(err.message);
+        process.exit(1);
+    }
+
     r.table('todos').indexWait('createdAt').run(conn).then(function(err, result) {
         console.log("Table and index are available, starting express...");
         startExpress();
     }).error(function(err) {
         // The database/table/index was not available, create them
         r.dbCreate(config.rethinkdb.db).run(conn).finally(function() {
-            r.tableCreate('todos').run(conn).finally(function() {
-                r.table('todos').indexCreate('createdAt').run(conn).finally(function(result) {
-                    r.table('todos').indexWait('createdAt').run(conn).then(function(result) {
-                        console.log("Table and index are available, starting express...");
-                        startExpress();
-                        conn.close();
-                    }).error(function(err) {
-                        if (err) {
-                            console.log("Could not wait for the completion of the index `todos`");
-                            console.log(err);
-                            process.exit(1);
-                        }
-                        console.log("Table and index are available, starting express...");
-                        startExpress();
-                        conn.close();
-                    });
-                });
-            });
+            return r.tableCreate('todos').run(conn)
+        }).finally(function() {
+            r.table('todos').indexCreate('createdAt').run(conn);
+        }).finally(function(result) {
+            r.table('todos').indexWait('createdAt').run(conn)
+        }).then(function(result) {
+            console.log("Table and index are available, starting express...");
+            startExpress();
+            conn.close();
+        }).error(function(err) {
+            if (err) {
+                console.log("Could not wait for the completion of the index `todos`");
+                console.log(err);
+                process.exit(1);
+            }
+            console.log("Table and index are available, starting express...");
+            startExpress();
+            conn.close();
         });
     });
 
