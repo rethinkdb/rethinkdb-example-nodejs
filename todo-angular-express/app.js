@@ -145,6 +145,11 @@ function closeConnection(req, res, next) {
  * Create tables/indexes then start express
  */
 r.connect(config.rethinkdb, function(err, conn) {
+    if (err) {
+        console.log("Could not open a connection to initialize the database");
+        console.log(err.message);
+        process.exit(1);
+    }
     r.table('todos').indexWait('createdAt').run(conn, function(err, result) {
         if (err) {
             // The database/table/index was not available, create them
