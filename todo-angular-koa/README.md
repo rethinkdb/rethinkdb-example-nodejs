@@ -1,7 +1,9 @@
-# Todo example with RethinkDB, ExpressJS and AngularJS
+# Todo example with RethinkDB, KoaJS and AngularJS
 
 This was originally an example to illustrate AngularJS. It was slightly modified to support a real server that would save the todos.  
 The code using rethinkdb is in the file `app.js`.
+
+This example uses generators, and require an unstable version of Node (>= 0.11.9).
 
 ### Run ###
 
@@ -9,7 +11,7 @@ Run `npm install` to install the dependencies.
 
 Start the server with
 ```
-node app.js
+node --harmony app.js
 ```
 
 
