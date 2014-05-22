@@ -10,7 +10,7 @@ var http = require('http');
 // Load config for RethinkDB and koa
 var config = require(__dirname+"/config.js")
 
-// Import rethinkdbdash
+// Import rethinkdb
 var r = require('rethinkdb');
 
 app.use(createConnection);
