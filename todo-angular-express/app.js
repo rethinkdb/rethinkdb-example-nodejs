@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var r = require('rethinkdb');
 
 // Load config for RethinkDB and express
-var config = require(__dirname+"/config.js")
+var config = require(__dirname+"/config.js");
 
 // Create the application
 var app = express();

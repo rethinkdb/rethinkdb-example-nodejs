@@ -1,17 +1,21 @@
 var app = require('koa')();
 
-// Middleware
+// Middleware and helpers
 var serve = require('koa-static');
 var parse = require('co-body');
 var route = require('koa-route');
 var assertTimeout = require('co-assert-timeout');
 var http = require('http');
 
-// Load config for RethinkDB and koa
-var config = require(__dirname+"/config.js")
-
-// Import rethinkdbdash
+// Import rethinkdb
 var r = require('rethinkdb');
+
+// Load config for RethinkDB and koa
+var config = require(__dirname+"/config.js");
+
+// Static content
+app.use(serve(__dirname+'/public'));
+
 
 app.use(createConnection);
 
@@ -20,11 +24,8 @@ app.use(route.put('/todo/new', create));
 app.use(route.post('/todo/update', update));
 app.use(route.post('/todo/delete', del));
 
-app.use(closeConnection);
-
 // Static content
-app.use(serve(__dirname+'/public'));
-
+app.use(closeConnection);
 
 // Retrieve all todos
 function* get(next) {
@@ -37,9 +38,7 @@ function* get(next) {
         this.status = 500;
         this.body = e.message || http.STATUS_CODES[this.status];
     }
-    console.log(1)
     yield next;
-    console.log(2)
 }
 
 // Create a new todo
@@ -99,15 +98,14 @@ function* del(next) {
  * Create a RethinkDB connection, and save it in req._rdbConn
  */
 function* createConnection(next) {
-    if (this.is('/todo/*')) {
-        try{
-            var conn = yield r.connect(config.rethinkdb);
-            this._rdbConn = conn;
-        }
-        catch(err) {
-            this.status = 500;
-            this.body = e.message || http.STATUS_CODES[this.status];
-        }
+    try{
+        var conn = yield r.connect(config.rethinkdb);
+        this._rdbConn = conn;
+
+    }
+    catch(err) {
+        this.status = 500;
+        this.body = e.message || http.STATUS_CODES[this.status];
     }
     yield next;
 }
@@ -116,10 +114,8 @@ function* createConnection(next) {
  * Close the RethinkDB connection
  */
 function* closeConnection(next) {
-    if (this.is('/todo/*')) {
-        req._rdbConn.close();
-    }
-    yield next;
+    this._rdbConn.close();
+    yield next
 }
 
 r.connect(config.rethinkdb, function(err, conn) {
@@ -131,7 +127,7 @@ r.connect(config.rethinkdb, function(err, conn) {
 
     r.table('todos').indexWait('createdAt').run(conn).then(function(err, result) {
         console.log("Table and index are available, starting express...");
-        startExpress();
+        startKoa();
     }).error(function(err) {
         // The database/table/index was not available, create them
         r.dbCreate(config.rethinkdb.db).run(conn).finally(function() {
@@ -142,7 +138,7 @@ r.connect(config.rethinkdb, function(err, conn) {
             r.table('todos').indexWait('createdAt').run(conn)
         }).then(function(result) {
             console.log("Table and index are available, starting express...");
-            startExpress();
+            startKoa();
             conn.close();
         }).error(function(err) {
             if (err) {
@@ -151,7 +147,7 @@ r.connect(config.rethinkdb, function(err, conn) {
                 process.exit(1);
             }
             console.log("Table and index are available, starting express...");
-            startExpress();
+            startKoa();
             conn.close();
         });
     });

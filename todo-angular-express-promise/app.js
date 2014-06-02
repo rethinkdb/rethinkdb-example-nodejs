@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var app = express();
 
 // Load config for RethinkDB and express
-var config = require(__dirname+"/config.js")
+var config = require(__dirname+"/config.js");
 
 var r = require('rethinkdb');
 
@@ -12,7 +12,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser());
 
 // Middleware that will create a connection to the database
-app.use('/todo', createConnection);
+app.use(createConnection);
 
 // Define main routes
 app.route('/todo/get').get(get);
@@ -21,7 +21,7 @@ app.route('/todo/update').post(update);
 app.route('/todo/delete').post(del);
 
 // Middleware to close a connection to the database
-app.use('/todo', closeConnection);
+app.use(closeConnection);
 
 
 /*
@@ -150,7 +150,6 @@ r.connect(config.rethinkdb, function(err, conn) {
             conn.close();
         });
     });
-
 });
 
 function startExpress() {
