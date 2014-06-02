@@ -1,10 +1,9 @@
-var app = require('koa')();
+var koa = require('koa');
 
 // Middleware and helpers
 var serve = require('koa-static');
 var parse = require('co-body');
 var router = require('koa-router');
-var assertTimeout = require('co-assert-timeout');
 var http = require('http');
 
 // Import rethinkdb
@@ -13,10 +12,12 @@ var r = require('rethinkdb');
 // Load config for RethinkDB and koa
 var config = require(__dirname+"/config.js");
 
+var app = koa();
 
 // Static content
 app.use(serve(__dirname+'/public'));
 
+// Create a RethinkDB connection
 app.use(createConnection);
 
 app.use(router(app));
@@ -25,6 +26,7 @@ app.put('/todo/new', create);
 app.post('/todo/update', update);
 app.post('/todo/delete', del);
 
+// Close the RethinkDB connection
 app.use(closeConnection);
 
 /*
@@ -124,7 +126,7 @@ r.connect(config.rethinkdb, function(err, conn) {
     }
 
     r.table('todos').indexWait('createdAt').run(conn).then(function(err, result) {
-        console.log("Table and index are available, starting express...");
+        console.log("Table and index are available, starting koa...");
         startKoa();
     }).error(function(err) {
         // The database/table/index was not available, create them
@@ -135,7 +137,7 @@ r.connect(config.rethinkdb, function(err, conn) {
         }).finally(function(result) {
             r.table('todos').indexWait('createdAt').run(conn)
         }).then(function(result) {
-            console.log("Table and index are available, starting express...");
+            console.log("Table and index are available, starting koa...");
             startKoa();
             conn.close();
         }).error(function(err) {
@@ -144,12 +146,11 @@ r.connect(config.rethinkdb, function(err, conn) {
                 console.log(err);
                 process.exit(1);
             }
-            console.log("Table and index are available, starting express...");
+            console.log("Table and index are available, starting koa...");
             startKoa();
             conn.close();
         });
     });
-
 });
 
 
