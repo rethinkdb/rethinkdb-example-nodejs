@@ -1,18 +1,20 @@
 // Import express and co
 var express = require('express');
 var bodyParser = require('body-parser');
-var app = express();
+var r = require('rethinkdb');
 
 // Load config for RethinkDB and express
 var config = require(__dirname+"/config.js")
 
-var r = require('rethinkdb');
+// Create the application
+var app = express();
 
 app.use(express.static(__dirname + '/public'));
+
 app.use(bodyParser());
 
 // Middleware that will create a connection to the database
-app.use('/todo', createConnection);
+app.use(createConnection);
 
 // Define main routes
 app.route('/todo/get').get(get);
@@ -21,7 +23,29 @@ app.route('/todo/update').post(update);
 app.route('/todo/delete').post(del);
 
 // Middleware to close a connection to the database
-app.use('/todo', closeConnection);
+app.use(closeConnection);
+
+/*
+ * Create a RethinkDB connection, and save it in req._rdbConn
+ */
+function createConnection(req, res, next) {
+    r.connect(config.rethinkdb, function(error, conn) {
+        if (error) {
+            handleError(res, error);
+        }
+        else {
+            req._rdbConn = conn;
+            next();
+        }
+    });
+}
+
+/*
+ * Send back a 500 error
+ */
+function handleError(res, error) {
+    return res.send(500, {error: error.message});
+}
 
 
 /*
@@ -110,28 +134,6 @@ function del(req, res, next) {
         handleError(res, new Error("The todo must have a field `id`."))
         next();
     }
-}
-
-/*
- * Send back a 500 error
- */
-function handleError(res, error) {
-    return res.send(500, {error: error.message});
-}
-
-/*
- * Create a RethinkDB connection, and save it in req._rdbConn
- */
-function createConnection(req, res, next) {
-    r.connect(config.rethinkdb, function(error, conn) {
-        if (error) {
-            handleError(res, error);
-        }
-        else {
-            req._rdbConn = conn;
-            next();
-        }
-    });
 }
 
 /*
