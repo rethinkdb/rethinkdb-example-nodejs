@@ -1,4 +1,4 @@
-// Import express and co
+// Import express
 var express = require('express');
 var bodyParser = require('body-parser');
 var r = require('rethinkdb');

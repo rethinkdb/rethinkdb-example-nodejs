@@ -5,7 +5,7 @@
   , "dependencies": {
       "koa": "0.6.0"
     , "koa-static": "1.4.2"
-    , "koa-route": "1.0.2"
+    , "koa-router": "3.1.4"
     , "co-body": "0.0.1"
     , "co": "3.0.2"
     , "body-parser": "1.0.2"

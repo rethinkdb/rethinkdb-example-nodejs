@@ -3,7 +3,7 @@ var app = require('koa')();
 // Middleware and helpers
 var serve = require('koa-static');
 var parse = require('co-body');
-var route = require('koa-route');
+var router = require('koa-router');
 var assertTimeout = require('co-assert-timeout');
 var http = require('http');
 
@@ -13,19 +13,34 @@ var r = require('rethinkdb');
 // Load config for RethinkDB and koa
 var config = require(__dirname+"/config.js");
 
+
 // Static content
 app.use(serve(__dirname+'/public'));
 
-
 app.use(createConnection);
 
-app.use(route.get('/todo/get', get));
-app.use(route.put('/todo/new', create));
-app.use(route.post('/todo/update', update));
-app.use(route.post('/todo/delete', del));
+app.use(router(app));
+app.get('/todo/get', get);
+app.put('/todo/new', create);
+app.post('/todo/update', update);
+app.post('/todo/delete', del);
 
-// Static content
 app.use(closeConnection);
+
+/*
+ * Create a RethinkDB connection, and save it in req._rdbConn
+ */
+function* createConnection(next) {
+    try{
+        var conn = yield r.connect(config.rethinkdb);
+        this._rdbConn = conn;
+    }
+    catch(err) {
+        this.status = 500;
+        this.body = e.message || http.STATUS_CODES[this.status];
+    }
+    yield next;
+}
 
 // Retrieve all todos
 function* get(next) {
@@ -46,7 +61,7 @@ function* create(next) {
     try{
         var todo = yield parse(this);
         todo.createdAt = r.now(); // Set the field `createdAt` to the current time
-        var result = yield r.table(config.table).insert(todo, {returnVals: true}).run(this._rdbConn);
+        var result = yield r.table('todos').insert(todo, {returnVals: true}).run(this._rdbConn);
 
         todo = result.new_val; // todo now contains the previous todo + a field `id` and `createdAt`
         this.body = JSON.stringify(todo);
@@ -67,7 +82,7 @@ function* update(next) {
             throw new Error("The todo must have a field `id`.");
         }
 
-        var result = yield r.table(config.table).get(todo.id).update(todo, {returnVals: true}).run(this._rdbConn);
+        var result = yield r.table('todos').get(todo.id).update(todo, {returnVals: true}).run(this._rdbConn);
         this.body = JSON.stringify(result.new_val);
     }
     catch(e) {
@@ -95,27 +110,10 @@ function* del(next) {
 }
 
 /*
- * Create a RethinkDB connection, and save it in req._rdbConn
- */
-function* createConnection(next) {
-    try{
-        var conn = yield r.connect(config.rethinkdb);
-        this._rdbConn = conn;
-
-    }
-    catch(err) {
-        this.status = 500;
-        this.body = e.message || http.STATUS_CODES[this.status];
-    }
-    yield next;
-}
-
-/*
  * Close the RethinkDB connection
  */
 function* closeConnection(next) {
     this._rdbConn.close();
-    yield next
 }
 
 r.connect(config.rethinkdb, function(err, conn) {
