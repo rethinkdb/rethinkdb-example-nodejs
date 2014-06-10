@@ -1,0 +1,13 @@
+td, th{
+    margin: 0px;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    text-align: right;
+}
+section{
+    margin: 0px 40px 20px 40px;
+}
+h1{
+    text-align: center;
+    margin: 30px 0px;
+}
