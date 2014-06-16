@@ -49,7 +49,7 @@ sticky(function() {
 
             feed.on('data', function(change) {
                 // Broadcast the change to all the sockets
-                io.sockets.emit('update', change.new_val);
+                io.sockets.emit('update', change);
 
                 // Update alldata with the new value
                 alldata[change.new_val.id] = change.new_val.value; 
