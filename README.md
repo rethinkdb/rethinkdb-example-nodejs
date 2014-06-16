@@ -1,4 +1,4 @@
 Examples with Node.js and RethinkDB
 ========================
 
-WIP
+Examples using Node.js and RethinkDB.
