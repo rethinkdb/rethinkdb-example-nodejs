@@ -52,19 +52,27 @@ function listen() {
     stream.on('tweet', function (tweet) {
         var words = tweet.text.split(/\s+/); // Split a tweet on white space
 
-        var found = false; // Whether the tweet contains number or not
+        var foundSignificantDigits = false; // Whether the tweet contains number or not
         var data = {}; // Keep track of the data to send to the database
 
         for(var i=0; i<words.length; i++) {
-            if (words[i].match(/^[1-9]/) !== null) { // Check if a word start with a digit
-                found = true; // We found at least one number
+            if (words[i].match(/^-?\d*[\.,]?\d*$/) !== null) { // Check if a word is a "usual" number
+                var digit = null;
+                for(var position in words[i]) { // Look for the first significant digit
+                    if (words[i][position].match(/[1-9]/) !== null) {
+                        digit = words[i][position];
+                        break;
+                    }
+                }
+                if (digit != null) { // Check if we found a significant digit (we may not find one for "0" for example.
+                    foundSignificantDigits = true; // We found at least one number
 
-                digit = words[i][0];
-                data[digit] = data[digit] || 0; // If data[digit] is undefined, set it to 0
-                data[digit]++
+                    data[digit] = data[digit] || 0; // If data[digit] is undefined, set it to 0
+                    data[digit]++
+                }
             }
         }
-        if (found === true) {
+        if (foundSignificantDigits === true) {
             for(var digit in data) {
                 // Update the document by incrementing its value with data[digit]
                 // Not that we fire the write without expecting an answer
