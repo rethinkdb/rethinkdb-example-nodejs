@@ -1,26 +1,93 @@
 <html>
     <head>
+        <title>RethinkDB's feed with Socket.IO - Benford's law</title>
+        <link rel="stylesheet" href="bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="style.css">
     </head>
 
     <body>
-        <h1>RethinkDB's feed with Socket.IO</h1>
-        <p>This little example illustrates <a href="http://en.wikipedia.org/wiki/Benford's_law">Benford's law</a> using Twitter.</p>
-        <p>A Node.js server listen Twitter's sample stream, and extract all the numbers</p>
-        <ol>
-            <li><span id="1">Loading...</span></li>
-            <li><span id="2">Loading...</span></li>
-            <li><span id="3">Loading...</span></li>
-            <li><span id="4">Loading...</span></li>
-            <li><span id="5">Loading...</span></li>
-            <li><span id="6">Loading...</span></li>
-            <li><span id="7">Loading...</span></li>
-            <li><span id="8">Loading...</span></li>
-            <li><span id="9">Loading...</span></li>
-        </ol>
+        <div class="container">
+            <section>
+                <h1>RethinkDB's feed with Socket.IO</h1>
+                <h2>Introduction</h2>
+                <p>
+                    This little example illustrates
+                    <a href="http://en.wikipedia.org/wiki/Benford's_law">Benford's law</a> using
+                    Twitter's streaming API.</br>The number of occurrences of each significant digit
+                    is computed and updated in real time.
+                </p>
+            </section>
 
-        <script src="jquery-1.10.2.min.js"></script>
-        <script src="socket.io-1.0.4.js"></script>
-        <script src="main.js"></script>
+            <section>
+                <h2>Results</h2>
 
+                <table>
+                    <tr>
+                        <th>Digit value</th>
+                        <th>Occurrences</th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td id="1">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td id="2">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td id="3">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td id="4">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td id="5">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td id="6">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td id="7">Loading...</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td id="8">Loading...</td></tr>
+                    <tr>
+                        <td>9</td>
+                        <td id="9">Loading...</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h2>How it works</h2>
+                <p>This example is composed of two parts:
+                    <ul>
+                        <li>
+                            A Node.js script listen to Twitter's sample stream, extract the first significant
+                            digits of the numbers and save it in RethinkDB.
+                        </li>
+                        <li>
+                            A Node.js server listen to any database changes, and broadcast it to any
+                            client connected using <a href="http://socket.io">Socket.io</a>
+                        </li>
+                    </ul>
+                </p>
+                <p>
+                    You can find the code on GitHub, in the
+                    <a href="https://github.com/rethinkdb/rethinkdb-example-nodejs/tree/master/benford">node.js examples repository</a>
+                </p>
+            </section>
+
+            <script src="jquery-1.10.2.min.js"></script>
+            <script src="socket.io-1.0.4.js"></script>
+            <script src="main.js"></script>
+
+        </div>
     </body>
 </html>
