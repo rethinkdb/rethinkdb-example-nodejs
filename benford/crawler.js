@@ -1,6 +1,6 @@
 var config = require(__dirname+"/config.js");
 
-var Twit = require('twit')
+var Twit = require('twit');
 var T = new Twit({
     consumer_key: config.twitter.consumer_key,
     consumer_secret: config.twitter.consumer_secret,
@@ -52,7 +52,7 @@ function listen() {
     stream.on('tweet', function (tweet) {
         var words = tweet.text.split(/\s+/); // Split a tweet on white space
 
-        var foundSignificantDigits = false; // Whether the tweet contains number or not
+        var foundSignificantDigits = false; // Whether we found a snificant digit to save
         var data = {}; // Keep track of the data to send to the database
 
         for(var i=0; i<words.length; i++) {
