@@ -21,67 +21,75 @@
             <section>
                 <h2>Results</h2>
 
-                <table>
-                    <tr>
-                        <th>Digit value</th>
-                        <th>Occurrences</th>
-                        <th>Percentage</th>
-                        <th>Expected</th>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td id="occurrences_1">Loading...</td>
-                        <td id="percentage_1">Loading...</td>
-                        <td id="expected_1">30.1%</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td id="occurrences_2">Loading...</td>
-                        <td id="percentage_2">Loading...</td>
-                        <td id="expected_2">17.6%</td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td id="occurrences_3">Loading...</td>
-                        <td id="percentage_3">Loading...</td>
-                        <td id="expected_3">12.5%</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td id="occurrences_4">Loading...</td>
-                        <td id="percentage_4">Loading...</td>
-                        <td id="expected_4">9.7%</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td id="occurrences_5">Loading...</td>
-                        <td id="percentage_5">Loading...</td>
-                        <td id="expected_5">7.9%</td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td id="occurrences_6">Loading...</td>
-                        <td id="percentage_6">Loading...</td>
-                        <td id="expected_6">6.7%</td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td id="occurrences_7">Loading...</td>
-                        <td id="percentage_7">Loading...</td>
-                        <td id="expected_7">5.8%</td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td id="occurrences_8">Loading...</td>
-                        <td id="percentage_8">Loading...</td>
-                        <td id="expected_8">5.1%</td>
-                    <tr>
-                        <td>9</td>
-                        <td id="occurrences_9">Loading...</td>
-                        <td id="percentage_9">Loading...</td>
-                        <td id="expected_9">4.6%</td>
-                    </tr>
-                </table>
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-striped table-condensed">
+                            <tr>
+                                <th>Digit value</th>
+                                <th>Occurrences</th>
+                                <th>Percentage</th>
+                                <th>Expected</th>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td id="occurrences_1">Loading...</td>
+                                <td id="percentage_1">Loading...</td>
+                                <td id="expected_1">30.1%</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td id="occurrences_2">Loading...</td>
+                                <td id="percentage_2">Loading...</td>
+                                <td id="expected_2">17.6%</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td id="occurrences_3">Loading...</td>
+                                <td id="percentage_3">Loading...</td>
+                                <td id="expected_3">12.5%</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td id="occurrences_4">Loading...</td>
+                                <td id="percentage_4">Loading...</td>
+                                <td id="expected_4">9.7%</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td id="occurrences_5">Loading...</td>
+                                <td id="percentage_5">Loading...</td>
+                                <td id="expected_5">7.9%</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td id="occurrences_6">Loading...</td>
+                                <td id="percentage_6">Loading...</td>
+                                <td id="expected_6">6.7%</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td id="occurrences_7">Loading...</td>
+                                <td id="percentage_7">Loading...</td>
+                                <td id="expected_7">5.8%</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td id="occurrences_8">Loading...</td>
+                                <td id="percentage_8">Loading...</td>
+                                <td id="expected_8">5.1%</td>
+                            <tr>
+                                <td>9</td>
+                                <td id="occurrences_9">Loading...</td>
+                                <td id="percentage_9">Loading...</td>
+                                <td id="expected_9">4.6%</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                    </div>
+                </div>
+
             </section>
 
             <section>
@@ -105,6 +113,7 @@
             </section>
 
             <script src="jquery-1.10.2.min.js"></script>
+            <script src="highcharts.js"></script>
             <script src="socket.io-1.0.4.js"></script>
             <script src="main.js"></script>
 
