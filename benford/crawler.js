@@ -11,43 +11,48 @@ var T = new Twit({
 var r = require('rethinkdb');
 
 var data;
-var connection;
+var failedAttempts = 0;
 
-r.connect({
-    host: config.rethinkdb.host,
-    port: config.rethinkdb.port,
-    db: config.rethinkdb.db
-}, function(err, conn) {
-    if (err) {
-        throw new Error("Could not open a connection to rethinkdb\n"+err.message)
-    }
+function init() {
+    r.connect({
+        host: config.rethinkdb.host,
+        port: config.rethinkdb.port,
+        db: config.rethinkdb.db
+    }, function(err, conn) {
+        if (err) {
+            failedAttempts++;
+            console.log("Attempt: "+failedAttempts)
+            console.error("Could not open a connection to rethinkdb\n"+err.message);
 
-    connection = conn;
+            return setTimeout(init, failedAttempts*5000);
+        }
 
-    // Initialize the table with first the database
-    r.dbCreate(config.rethinkdb.db).run(connection, function(err, result) {
-        // If the database already exists, we'll get an error here, but we'll just keep going
-        r.db(config.rethinkdb.db).tableCreate('benford').run(connection, function(err, result) {
-            // If the table already exists, we'll get an error here, but we'll just keep going
+        // Initialize the table with first the database
+        r.dbCreate(config.rethinkdb.db).run(conn, function(err, result) {
+            // If the database already exists, we'll get an error here, but we'll just keep going
+            r.db(config.rethinkdb.db).tableCreate('benford').run(conn, function(err, result) {
+                // If the table already exists, we'll get an error here, but we'll just keep going
 
-            var seeds = [];
-            for(var i=1; i<10; i++) {
-                seeds.push({id: ""+i, value: 0}); // Note: We use the digit value as the primary key and save it as a string
-            }
-            r.db(config.rethinkdb.db).table('benford').insert(seeds).run(connection, function(err, result) {
-                // If the database was already initialized, the inserts will not be executed since RethinkDB
-                // does not allow redundant primary keys (`id`)
-                listen();
+                var seeds = [];
+                for(var i=1; i<10; i++) {
+                    seeds.push({id: ""+i, value: 0}); // Note: We use the digit value as the primary key and save it as a string
+                }
+                r.db(config.rethinkdb.db).table('benford').insert(seeds).run(conn, function(err, result) {
+                    // If the database was already initialized, the inserts will not be executed since RethinkDB
+                    // does not allow redundant primary keys (`id`)
+                    listen();
+                });
             });
         });
     });
-});
+}
 
 
 // Listen to Twitter's stream and save the significant digits occurrences that we find
 function listen() {
     // Open the stream
     var stream = T.stream('statuses/sample');
+    console.log("Listening on statuses/sample");
 
     stream.on('tweet', function (tweet) {
         var words = tweet.text.split(/\s+/); // Split a tweet on white space
@@ -76,8 +81,30 @@ function listen() {
             for(var digit in data) {
                 // Update the document by incrementing its value with data[digit]
                 // Not that we fire the write without expecting an answer
-                r.db(config.rethinkdb.db).table('benford').get(digit).update({value: r.row("value").add(data[digit])}).run(connection, {noreply: true})
+                r.connect({}).then(function(conn) {
+                    conn.on('error', function(err) {
+                        console.error(err.message);
+                    });
+                    r.db(config.rethinkdb.db).table('benford').get(digit).update({value: r.row("value").add(data[digit])}).run(conn, function(err, result) {
+                        if (err) {
+                            if (err.message.match(/does not exist/)) {
+                                return init();
+                            }
+                            console.error(err.message);
+                        }
+                        conn.close();
+                    });
+                }).error(function(err) {
+                    console.error(err.message);
+                });
             }
         }
     });
+    stream.on("close", function(err) {
+        console.error("Twitter's stream was closed");
+        if (err) console.log(err.message);
+        listen();
+    });
 }
+
+init();

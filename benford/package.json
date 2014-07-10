@@ -6,6 +6,9 @@
       "express": "4.0.0"
     , "socket.io": "1.0.4"
     , "rethinkdb": "1.13.0-0"
+    , "twit": "1.1.15"
+    , "forever": "0.11.1"
+    , "bluebird": "2.2.1"
     , "sticky-session": "0.1.0"
   }
 }

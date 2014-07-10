@@ -1,6 +1,6 @@
-$(function() {
-    var socket = io();
+$(function init() {
     var total = 0;
+    var rawData = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     var currentData = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     // Create the graph
@@ -56,7 +56,9 @@ $(function() {
         }]
     });
 
+    var socket = io();
     socket.on('all', function(alldata) {
+        total = 0;
         for(var digit in alldata) {
             total += alldata[digit]
         }
@@ -67,20 +69,34 @@ $(function() {
             $("#percentage_"+digit).html((alldata[digit]/total*100).toFixed(1)+"%")     
 
             // Update the graph's data
-            currentData[digit-1] = parseFloat((alldata[digit]/total*100).toFixed(1))
+            rawData[digit-1] = parseFloat(alldata[digit]);
+            currentData[digit-1] = parseFloat((rawData[digit-1]/total*100).toFixed(1))
         }
         // Re-render the graph
         chart.series[1].setData(currentData);
     });
 
     socket.on('update', function(data) {
-        // Update the table
-        $("#occurrences_"+data.new_val.id).html(data.new_val.value)
-        total += data.new_val.value-data.old_val.value
-        $("#percentage_"+data.new_val.id).html((data.new_val.value/total*100).toFixed(1)+"%")
+
+        rawData[data.new_val.id-1] = parseFloat(data.new_val.value);
+        $("#occurrences_"+data.new_val.id).html(rawData[data.new_val.id-1]);
+
+        // We need to re-compute the total number of occurrences because we may have missed some
+        // changes - like if the connection node-rethinkdb was not available.
+        total = 0;
+        for(var i=0; i<rawData.length; i++) {
+            total += rawData[i];
+        }
+
+        // Compute the percentages
+        for(var i=0; i<rawData.length; i++) {
+            currentData[i] = parseFloat((rawData[i]/total*100).toFixed(1));
+
+            // Update the table
+            $("#percentage_"+(i+1)).html(currentData[i]+"%")
+        }
 
         // Update the graph
-        currentData[data.new_val.id-1] = parseFloat((data.new_val.value/total*100).toFixed(1));
         chart.series[1].setData(currentData);
     });
 });
