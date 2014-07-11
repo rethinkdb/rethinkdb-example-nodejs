@@ -13,11 +13,13 @@ var r = require('rethinkdb');
 var data;
 var failedAttempts = 0;
 
+// Initialize the database
 function init() {
     r.connect({
         host: config.rethinkdb.host,
         port: config.rethinkdb.port,
-        db: config.rethinkdb.db
+        db: config.rethinkdb.db,
+        authKey: config.rethinkdb.authKey
     }, function(err, conn) {
         if (err) {
             failedAttempts++;
@@ -54,6 +56,8 @@ function listen() {
     var stream = T.stream('statuses/sample');
     console.log("Listening on statuses/sample");
 
+    var errorConnect = false;
+
     stream.on('tweet', function (tweet) {
         var words = tweet.text.split(/\s+/); // Split a tweet on white space
 
@@ -82,6 +86,11 @@ function listen() {
                 // Update the document by incrementing its value with data[digit]
                 // Not that we fire the write without expecting an answer
                 r.connect({}).then(function(conn) {
+                    if (errorConnect === true) {
+                        console.log("Connection retrieved.");
+                        errorConnect = false;
+                    }
+
                     conn.on('error', function(err) {
                         console.error(err.message);
                     });
@@ -95,6 +104,7 @@ function listen() {
                         conn.close();
                     });
                 }).error(function(err) {
+                    errorConnect = true;
                     console.error(err.message);
                 });
             }

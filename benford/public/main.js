@@ -1,7 +1,7 @@
 $(function init() {
-    var total = 0;
-    var rawData = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    var currentData = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var total = 0; // total number of occurrences
+    var occurrences = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // occurrences of each digit (shifted by 1)
+    var percentages = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // percentages of each digit (shifted by 1)
 
     // Create the graph
     var chart = new Highcharts.Chart({
@@ -52,12 +52,16 @@ $(function init() {
 
         }, {
             name: 'Results',
-            data: currentData
+            data: percentages
         }]
     });
 
+    // Initialize socket.io
     var socket = io();
+
     socket.on('all', function(alldata) {
+        // We are sent the occurrences of every digit
+
         total = 0;
         for(var digit in alldata) {
             total += alldata[digit]
@@ -69,34 +73,37 @@ $(function init() {
             $("#percentage_"+digit).html((alldata[digit]/total*100).toFixed(1)+"%")     
 
             // Update the graph's data
-            rawData[digit-1] = parseFloat(alldata[digit]);
-            currentData[digit-1] = parseFloat((rawData[digit-1]/total*100).toFixed(1))
+            occurrences[digit-1] = parseFloat(alldata[digit]);
+            percentages[digit-1] = parseFloat((occurrences[digit-1]/total*100).toFixed(1))
         }
+
         // Re-render the graph
-        chart.series[1].setData(currentData);
+        chart.series[1].setData(percentages);
     });
 
     socket.on('update', function(data) {
+        // We have an update for one digit
 
-        rawData[data.new_val.id-1] = parseFloat(data.new_val.value);
-        $("#occurrences_"+data.new_val.id).html(rawData[data.new_val.id-1]);
+        // Update the number of occurrence
+        occurrences[data.new_val.id-1] = parseFloat(data.new_val.value);
+        $("#occurrences_"+data.new_val.id).html(occurrences[data.new_val.id-1]);
 
         // We need to re-compute the total number of occurrences because we may have missed some
-        // changes - like if the connection node-rethinkdb was not available.
+        // changes - like if the connection node-rethinkdb was not dropped.
         total = 0;
-        for(var i=0; i<rawData.length; i++) {
-            total += rawData[i];
+        for(var i=0; i<occurrences.length; i++) {
+            total += occurrences[i];
         }
 
-        // Compute the percentages
-        for(var i=0; i<rawData.length; i++) {
-            currentData[i] = parseFloat((rawData[i]/total*100).toFixed(1));
+        // Compute the percentages of every digit
+        for(var i=0; i<occurrences.length; i++) {
+            percentages[i] = parseFloat((occurrences[i]/total*100).toFixed(1));
 
             // Update the table
-            $("#percentage_"+(i+1)).html(currentData[i]+"%")
+            $("#percentage_"+(i+1)).html(percentages[i]+"%")
         }
 
         // Update the graph
-        chart.series[1].setData(currentData);
+        chart.series[1].setData(percentages);
     });
 });
