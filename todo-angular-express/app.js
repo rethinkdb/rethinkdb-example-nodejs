@@ -31,7 +31,7 @@ app.use(closeConnection);
 function createConnection(req, res, next) {
     r.connect(config.rethinkdb, function(error, conn) {
         if (error) {
-            handleError(res, error);
+            handleError(error, res);
         }
         else {
             req._rdbConn = conn;
@@ -43,7 +43,7 @@ function createConnection(req, res, next) {
 /*
  * Send back a 500 error
  */
-function handleError(res, error) {
+function handleError(error, res) {
     return res.send(500, {error: error.message});
 }
 
@@ -54,13 +54,13 @@ function handleError(res, error) {
 function get(req, res, next) {
     r.table('todos').orderBy({index: "createdAt"}).run(req._rdbConn, function(error, cursor) {
         if (error) {
-            handleError(res, error) 
+            handleError(error, res) 
         }
         else {
             // Retrieve all the todos in an array
             cursor.toArray(function(error, result) {
                 if (error) {
-                    handleError(res, error) 
+                    handleError(error, res) 
                 }
                 else {
                     res.send(JSON.stringify(result));
@@ -80,10 +80,10 @@ function create(req, res, next) {
 
     r.table('todos').insert(todo, {returnVals: true}).run(req._rdbConn, function(error, result) {
         if (error) {
-            handleError(res, error) 
+            handleError(error, res) 
         }
         else if (result.inserted !== 1) {
-            handleError(res, new Error("Document was not inserted.")) 
+            handleError(new Error("Document was not inserted."), res)
         }
         else {
             res.send(JSON.stringify(result.new_val));
@@ -100,7 +100,7 @@ function update(req, res, next) {
     if ((todo != null) && (todo.id != null)) {
         r.table('todos').get(todo.id).update(todo, {returnVals: true}).run(req._rdbConn, function(error, result) {
             if (error) {
-                handleError(res, error) 
+                handleError(error, res)
             }
             else {
                 res.send(JSON.stringify(result.new_val));
@@ -109,7 +109,7 @@ function update(req, res, next) {
         });
     }
     else {
-        handleError(res, new Error("The todo must have a field `id`."))
+        handleError(new Error("The todo must have a field `id`."), res)
         next();
     }
 }
@@ -122,7 +122,7 @@ function del(req, res, next) {
     if ((todo != null) && (todo.id != null)) {
         r.table('todos').get(todo.id).delete().run(req._rdbConn, function(error, result) {
             if (error) {
-                handleError(res, error) 
+                handleError(error, res) 
             }
             else {
                 res.send(JSON.stringify(result));
@@ -131,7 +131,7 @@ function del(req, res, next) {
         });
     }
     else {
-        handleError(res, new Error("The todo must have a field `id`."))
+        handleError(new Error("The todo must have a field `id`."), res)
         next();
     }
 }
