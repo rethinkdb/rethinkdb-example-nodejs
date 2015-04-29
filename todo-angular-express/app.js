@@ -1,211 +1,200 @@
-// Import express
+var async = require('async');
 var express = require('express');
 var bodyParser = require('body-parser');
 var r = require('rethinkdb');
 
-// Load config for RethinkDB and express
-var config = require(__dirname+"/config.js");
+var config = require(__dirname + '/config.js');
 
-// Create the application
 var app = express();
 
+
+//For serving the index.html and all the other front-end assets.
 app.use(express.static(__dirname + '/public'));
 
-app.use(bodyParser());
+app.use(bodyParser.json());
 
-// Middleware that will create a connection to the database
-app.use(createConnection);
+//The REST routes for "todos".
+app.route('/todos')
+  .get(listTodoItems)
+  .post(createTodoItem);
 
-// Define main routes
-app.route('/todo/get').get(get);
-app.route('/todo/new').put(create);
-app.route('/todo/update').post(update);
-app.route('/todo/delete').post(del);
+app.route('/todos/:id')
+  .get(getTodoItem)
+  .put(updateTodoItem)
+  .delete(deleteTodoItem);
 
-// Middleware to close a connection to the database
-app.use(closeConnection);
+//If we reach this middleware the route could not be handled and must be unknown.
+app.use(handle404);
+
+//Generic error handling middleware.
+app.use(handleError);
+
 
 /*
- * Create a RethinkDB connection, and save it in req._rdbConn
+ * Retrieve all todo items.
  */
-function createConnection(req, res, next) {
-    r.connect(config.rethinkdb, function(error, conn) {
-        if (error) {
-            handleError(res, error);
-        }
-        else {
-            req._rdbConn = conn;
-            next();
-        }
+function listTodoItems(req, res, next) {
+  r.table('todos').orderBy({index: 'createdAt'}).run(req.app._rdbConn, function(err, cursor) {
+    if(err) {
+      return next(err);
+    }
+
+    //Retrieve all the todos in an array.
+    cursor.toArray(function(err, result) {
+      if(err) {
+        return next(err);
+      }
+
+      res.json(result);
     });
+  });
 }
 
 /*
- * Send back a 500 error
+ * Insert a new todo item.
  */
-function handleError(res, error) {
-    return res.send(500, {error: error.message});
-}
+function createTodoItem(req, res, next) {
+  var todoItem = req.body;
+  todoItem.createdAt = r.now();
 
+  console.dir(todoItem);
 
-/*
- * Retrieve all todos
- */
-function get(req, res, next) {
-    r.table('todos').orderBy({index: "createdAt"}).run(req._rdbConn, function(error, cursor) {
-        if (error) {
-            handleError(res, error) 
-        }
-        else {
-            // Retrieve all the todos in an array
-            cursor.toArray(function(error, result) {
-                if (error) {
-                    handleError(res, error) 
-                }
-                else {
-                    res.send(JSON.stringify(result));
-                }
-            });
-        }
-        next();
-    });
-}
-
-/*
- * Insert a todo
- */
-function create(req, res, next) {
-    var todo = req.body;
-    todo.createdAt = r.now(); // Set the field `createdAt` to the current time
-
-    r.table('todos').insert(todo, {returnVals: true}).run(req._rdbConn, function(error, result) {
-        if (error) {
-            handleError(res, error) 
-        }
-        else if (result.inserted !== 1) {
-            handleError(res, new Error("Document was not inserted.")) 
-        }
-        else {
-            res.send(JSON.stringify(result.new_val));
-        }
-        next();
-    });
-}
-
-/*
- * Update a todo
- */
-function update(req, res, next) {
-    var todo = req.body;
-    if ((todo != null) && (todo.id != null)) {
-        r.table('todos').get(todo.id).update(todo, {returnVals: true}).run(req._rdbConn, function(error, result) {
-            if (error) {
-                handleError(res, error) 
-            }
-            else {
-                res.send(JSON.stringify(result.new_val));
-            }
-            next();
-        });
+  r.table('todos').insert(todoItem, {returnChanges: true}).run(req.app._rdbConn, function(err, result) {
+    if(err) {
+      return next(err);
     }
-    else {
-        handleError(res, new Error("The todo must have a field `id`."))
-        next();
-    }
+
+    res.json(result.changes[0].new_val);
+  });
 }
 
 /*
- * Delete a todo
+ * Get a specific todo item.
  */
-function del(req, res, next) {
-    var todo = req.body;
-    if ((todo != null) && (todo.id != null)) {
-        r.table('todos').get(todo.id).delete().run(req._rdbConn, function(error, result) {
-            if (error) {
-                handleError(res, error) 
-            }
-            else {
-                res.send(JSON.stringify(result));
-            }
-            next();
-        });
+function getTodoItem(req, res, next) {
+  var todoItemID = req.params.id;
+
+  r.table('todos').get(todoItemID).run(req.app._rdbConn, function(err, result) {
+    if(err) {
+      return next(err);
     }
-    else {
-        handleError(res, new Error("The todo must have a field `id`."))
-        next();
-    }
+
+    res.json(result);
+  });
 }
 
 /*
- * Close the RethinkDB connection
+ * Update a todo item.
  */
-function closeConnection(req, res, next) {
-    req._rdbConn.close();
+function updateTodoItem(req, res, next) {
+  var todoItem = req.body;
+  var todoItemID = req.params.id;
+
+  r.table('todos').get(todoItemID).update(todoItem, {returnChanges: true}).run(req.app._rdbConn, function(err, result) {
+    if(err) {
+      return next(err);
+    }
+
+    res.json(result.changes[0].new_val);
+  });
 }
 
 /*
+ * Delete a todo item.
+ */
+function deleteTodoItem(req, res, next) {
+  var todoItemID = req.params.id;
+
+  r.table('todos').get(todoItemID).delete().run(req.app._rdbConn, function(err, result) {
+    if(err) {
+      return next(err);
+    }
+
+    res.json({success: true});
+  });
+}
+
+/*
+ * Page-not-found middleware.
+ */
+function handle404(req, res, next) {
+  res.status(404).end('not found');
+}
+
+/*
+ * Generic error handling middleware.
+ * Send back a 500 page and log the error to the console.
+ */
+function handleError(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).json({err: err.message});
+}
+
+/*
+ * Store the db connection and start listening on a port.
+ */
+function startExpress(connection) {
+  app._rdbConn = connection;
+  app.listen(config.express.port);
+  console.log('Listening on port ' + config.express.port);
+}
+
+/*
+ * Connect to rethinkdb, create the needed tables/indexes and then start express.
  * Create tables/indexes then start express
  */
-r.connect(config.rethinkdb, function(err, conn) {
-    if (err) {
-        console.log("Could not open a connection to initialize the database");
-        console.log(err.message);
-        process.exit(1);
-    }
-    r.table('todos').indexWait('createdAt').run(conn, function(err, result) {
-        if (err) {
-            // The database/table/index was not available, create them
-
-            r.dbCreate(config.rethinkdb.db).run(conn, function(err, result) {
-                if ((err) && (!err.message.match(/Database `.*` already exists/))) {
-                    console.log("Could not create the database `"+config.db+"`");
-                    console.log(err);
-                    process.exit(1);
-                }
-                console.log('Database `'+config.rethinkdb.db+'` created.');
-
-                r.tableCreate('todos').run(conn, function(err, result) {
-                    if ((err) && (!err.message.match(/Table `.*` already exists/))) {
-                        console.log("Could not create the table `todos`");
-                        console.log(err);
-                        process.exit(1);
-                    }
-                    console.log('Table `todos` created.');
-
-                    r.table('todos').indexCreate('createdAt').run(conn, function(err, result) {
-                        if ((err) && (!err.message.match(/Index `.*` already exists/))) {
-                            console.log("Could not create the index `todos`");
-                            console.log(err);
-                            process.exit(1);
-                        }
-
-                        console.log('Index `createdAt` created.');
-
-                        r.table('todos').indexWait('createdAt').run(conn, function(err, result) {
-                            if (err) {
-                                console.log("Could not wait for the completion of the index `todos`");
-                                console.log(err);
-                                process.exit(1);
-                            }
-                            console.log('Index `createdAt` ready.');
-                            console.log("Table and index are available, starting express...");
-
-                            startExpress();
-                            conn.close();
-                        });
-                    });
-                });
-            });
-        }
-        else {
-            console.log("Table and index are available, starting express...");
-            startExpress();
-        }
+async.waterfall([
+  function connect(callback) {
+    r.connect(config.rethinkdb, callback);
+  },
+  function createDatabase(connection, callback) {
+    //Create the database if needed.
+    r.dbList().contains(config.rethinkdb.db).do(function(containsDb) {
+      return r.branch(
+        containsDb,
+        {created: 0},
+        r.dbCreate(config.rethinkdb.db)
+      );
+    }).run(connection, function(err) {
+      callback(err, connection);
     });
+  },
+  function createTable(connection, callback) {
+    //Create the table if needed.
+    r.tableList().contains('todos').do(function(containsTable) {
+      return r.branch(
+        containsTable,
+        {created: 0},
+        r.tableCreate('todos')
+      );
+    }).run(connection, function(err) {
+      callback(err, connection);
+    });
+  },
+  function createIndex(connection, callback) {
+    //Create the index if needed.
+    r.table('todos').indexList().contains('createdAt').do(function(hasIndex) {
+      return r.branch(
+        hasIndex,
+        {created: 0},
+        r.table('todos').indexCreate('createdAt')
+      );
+    }).run(connection, function(err) {
+      callback(err, connection);
+    });
+  },
+  function waitForIndex(connection, callback) {
+    //Wait for the index to be ready.
+    r.table('todos').indexWait('createdAt').run(connection, function(err, result) {
+      callback(err, connection);
+    });
+  }
+], function(err, connection) {
+  if(err) {
+    console.error(err);
+    process.exit(1);
+    return;
+  }
 
+  startExpress(connection);
 });
-
-function startExpress() {
-    app.listen(config.express.port);
-    console.log('Listening on port '+config.express.port);
-}
