@@ -39,7 +39,7 @@ function* createConnection(next) {
     }
     catch(err) {
         this.status = 500;
-        this.body = e.message || http.STATUS_CODES[this.status];
+        this.body = err.message || http.STATUS_CODES[this.status];
     }
     yield next;
 }
