@@ -9,7 +9,7 @@
     , "co-body": "0.0.1"
     , "co": "3.0.2"
     , "body-parser": "1.0.2"
-    , "rethinkdb": "1.12.0-0"
+    , "rethinkdb": ">=2.1.1"
     , "co-assert-timeout": "0.0.4"
   }
 }
