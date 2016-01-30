@@ -66,7 +66,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $routeParams, todoStora
             console.log('fds');
             alert("Failed to update the status of this TODO");
         });
-    
+
     };
 	$scope.editTodo = function (todo) {
 		$scope.editedTodo = todo;
