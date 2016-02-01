@@ -65,7 +65,7 @@ function* create(next) {
         todo.createdAt = r.now(); // Set the field `createdAt` to the current time
         var result = yield r.table('todos').insert(todo, {returnChanges: true}).run(this._rdbConn);
 
-        todo = result.new_val; // todo now contains the previous todo + a field `id` and `createdAt`
+        todo = result.changes[0].new_val; // todo now contains the previous todo + a field `id` and `createdAt`
         this.body = JSON.stringify(todo);
     }
     catch(e) {
@@ -85,7 +85,7 @@ function* update(next) {
         }
 
         var result = yield r.table('todos').get(todo.id).update(todo, {returnChanges: true}).run(this._rdbConn);
-        this.body = JSON.stringify(result.new_val);
+        this.body = JSON.stringify(result.changes[0].new_val);
     }
     catch(e) {
         this.status = 500;
