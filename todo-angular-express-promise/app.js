@@ -42,13 +42,12 @@ function get(req, res, next) {
 function create(req, res, next) {
     var todo = req.body;
     todo.createdAt = r.now(); // Set the field `createdAt` to the current time
-
     r.table('todos').insert(todo, {returnChanges: true}).run(req._rdbConn).then(function(result) {
         if (result.inserted !== 1) {
-            handleError(res, next)(new Error("Document was not inserted.")); 
+            handleError(res, next)(new Error("Document was not inserted."));
         }
         else {
-            res.send(JSON.stringify(result.new_val));
+            res.send(JSON.stringify(result.changes[0].new_val));
         }
     }).error(handleError(res))
     .finally(next);
@@ -61,7 +60,7 @@ function update(req, res, next) {
     var todo = req.body;
     if ((todo != null) && (todo.id != null)) {
         r.table('todos').get(todo.id).update(todo, {returnChanges: true}).run(req._rdbConn).then(function(result) {
-            res.send(JSON.stringify(result.new_val));
+            res.send(JSON.stringify(result.changes[0].new_val));
         }).error(handleError(res))
         .finally(next);
     }
