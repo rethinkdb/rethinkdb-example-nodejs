@@ -111,7 +111,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $routeParams, todoStora
 	};
 
 	$scope.clearCompletedTodos = function () {
-		$scope.todos = todos.filter(function (val) {
+		$scope.todos = $scope.todos.filter(function (val) {
 			return !val.completed;
 		});
 	};
