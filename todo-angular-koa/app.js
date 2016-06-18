@@ -4,7 +4,6 @@ var koa = require('koa');
 var serve = require('koa-static');
 var parse = require('co-body');
 var Router = require('koa-router');
-var http = require('http');
 var logger = require('koa-logger');
 var co = require('co');
 
@@ -109,7 +108,7 @@ co(function* () {
 }).then(function () {
     conn.close();
     app.listen(config.koa.port, function() {
-      console.log('Listening on port', config.koa.port);
+        console.log('Listening on port', config.koa.port);
     });
 }).catch(function (err) {
     conn.close();
