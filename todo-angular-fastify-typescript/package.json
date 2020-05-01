@@ -1,0 +1,22 @@
+{
+  "name": "todo",
+  "version": "0.0.2",
+  "private": true,
+  "scripts": {
+    "start": "ts-node app",
+    "dev": "ts-node-dev app",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@types/node": "^13.13.4",
+    "fastify": "^2.14.0",
+    "fastify-static": "^2.7.0",
+    "rethinkdb": "^2.2.1",
+    "ts-node": "^8.9.1",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "@types/rethinkdb": "^2.3.14"
+  }
+}
