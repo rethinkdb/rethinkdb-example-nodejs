@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "body-parser": "1.0.2",
-    "express": "4.0.0",
+    "express": "4.17.1",
     "rethinkdb": "^2.2.1"
   }
 }
